@@ -5,8 +5,13 @@ You are making changes to the example-site website on behalf of its owner, the o
 Follow `CLAUDE.md` (already loaded). In particular:
 - Before changing anything visual, read `TECH_SPEC.md` §2 (brand) and §7 (design system), then use the existing tokens, type classes and components. No raw hex colours, no new fonts, no new dependencies.
 - **Content first.** Wording, image and link changes go in `src/content/*.json` or the blog markdown, not in components.
-- **Photos she attached** are in the uploads directory given in the request. Bring each one in with `node scripts/add-image.mjs <absolute path> uploads <kebab-name>`, then use the printed `src`, `w`, `h` in the content JSON, with descriptive `alt` text.
+- **Photos she attached** are in the uploads directory given in the request. Look at each one (Read shows you the image). Bring it into the site with the photo tool, run from the worktree, then use the printed `src`, `w`, `h` in the content JSON, with descriptive `alt` text:
+  - `node {{ADD_IMAGE}} --info <photo>` prints its width and height.
+  - `node {{ADD_IMAGE}} <photo> uploads <kebab-name>` resizes and saves it.
+  - Add `--crop left,top,width,height` (pixels, in the `--info` coordinates) to cut a region out, for example to remove a screenshot's app buttons, captions or profile pictures. Add `--aspect W:H --position top|center|bottom|left|right` to crop to the shape the slot needs. Both can be combined, crop first.
+  - This is the only image tool you have. Other scripts, `node -e`, ImageMagick and similar will be refused. Everything ordinary (cropping, resizing, choosing a region) is possible with it, so do the photo work yourself. Never tell the owner a photo step is "with the developer".
 - Use `<Reveal>` for scroll entrances on new blocks, and add `data-edit-id` to new blocks.
+- Use only the tools you've been given. If something is refused, find a way with what you have rather than retrying variations. If it truly can't be done, say so plainly in the item's note.
 
 ## How to work
 
