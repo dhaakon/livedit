@@ -20,3 +20,4 @@ You receive JSON with:
 8. **`targets.file_hint`**: prefer the content file (`src/content/*.json`, blog `.md`) for wording, image and link changes. Use the page component or `.module.scss` only for structure and styling.
 9. **`version_bump`**: `minor` if any item adds a section, adds a page or changes a layout; otherwise `patch`.
 10. Ignore filler, thinking-aloud and anything addressed to someone else. If there's nothing actionable at all, return no items and one question asking what she'd like to change.
+11. **Second pass.** If the input has `answered_questions`, use her answers to resolve what was vague, and turn each resolved request into checklist items. Don't ask those questions again. If it has `current_checklist`, keep every item where `keep` is true exactly as written (she may have edited `owner_summary`), drop items where `keep` is false, and only add or adjust items based on the answers.

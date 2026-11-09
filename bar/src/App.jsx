@@ -45,7 +45,8 @@ export function App({ host }) {
     refresh();
     let t;
     const stop = subscribe((msg) => {
-      if (msg.type === 'changed' || msg.type === 'event') {
+      // 'hello' arrives on every (re)connect, e.g. after a server restart.
+      if (msg.type === 'changed' || msg.type === 'event' || msg.type === 'hello') {
         clearTimeout(t);
         t = setTimeout(refresh, 200);
       }
@@ -294,7 +295,7 @@ export function App({ host }) {
               ◀
             </button>
             <button className="btn version" onClick={() => setPanel(panel === 'history' ? null : 'history')} title="History">
-              {live} <span className="muted">· {live === latest ? 'latest' : 'older'}</span>
+              {live} <span className="muted hint">· {live === latest ? 'latest' : 'older'}</span>
             </button>
             <button
               className="btn icon"
@@ -441,7 +442,7 @@ const STATUS_TEXT = {
   needs_answers: 'A question for you',
   ready_for_preview: 'Ready to look at',
   publishing: 'Making it live…',
-  published: 'Live',
+  published: 'Published',
   failed: 'Needs a hand',
 };
 
@@ -485,18 +486,24 @@ function RequestBody({ r, data, call, viewing, onNotQuite }) {
 
   if (r.status === 'awaiting_review' && summary && items) {
     const qs = summary.questions;
+    const answerOf = (q, i) => (answers[i] ?? q.answer ?? '').trim();
+    // An answered open question can become new checklist items, so the list
+    // gets rethought (and comes back here) before anything goes to Claude.
+    const rethink = qs.some((q, i) => q.item === null && answerOf(q, i)) || !items.some((i) => i.include);
+    const canSend = items.some((i) => i.include) || qs.some((q, i) => answerOf(q, i));
     const submit = async () => {
       await call(() =>
         api(`requests/${r.id}`, {
           method: 'PATCH',
-          body: { items, questions: qs.map((q, i) => ({ answer: answers[i] ?? q.answer ?? '' })) },
+          body: { items, questions: qs.map((q, i) => ({ answer: answerOf(q, i) })) },
         }),
       );
-      await call(() => api(`requests/${r.id}/submit`, { method: 'POST' }), 'Sent to Claude.');
+      await call(() => api(`requests/${r.id}/submit`, { method: 'POST' }), rethink ? 'Thanks — updating the list.' : 'Sent to Claude.');
     };
     return (
       <>
         {summary.fallback && <p className="muted">I couldn't tidy this one up, so here's what you said. Edit it if needed.</p>}
+        {summary.items.length === 0 && <p className="muted">Answer below and I'll turn it into a list for you to check.</p>}
         <ol className="checklist">
           {summary.items.map((item, i) => (
             <li key={i}>
@@ -522,7 +529,7 @@ function RequestBody({ r, data, call, viewing, onNotQuite }) {
           <OlderNote live={r.base_version} latest={r.latest_at_creation} versions={data.versions} />
         )}
         <div className="actions">
-          <button className="btn primary" onClick={submit} disabled={!items.some((i) => i.include)}>Send to Claude</button>
+          <button className="btn primary" onClick={submit} disabled={!canSend}>{rethink ? 'Update the list' : 'Send to Claude'}</button>
           <button className="link" onClick={discard}>Discard</button>
         </div>
       </>
@@ -593,13 +600,21 @@ function Question({ q, value, onChange }) {
     <div className="question">
       <p>❓ {q.ask}</p>
       {q.options?.length > 0 && (
-        <div className="options">
+        <div className="options" role="radiogroup">
           {q.options.map((o) => (
-            <button key={o} className={value === o ? 'btn small active' : 'btn small'} onClick={() => onChange(o)}>{o}</button>
+            <button key={o} role="radio" aria-checked={value === o} className={value === o ? 'choice selected' : 'choice'} onClick={() => onChange(value === o ? '' : o)}>
+              <span className="tick" aria-hidden="true">{value === o ? '✓' : ''}</span>
+              {o}
+            </button>
           ))}
         </div>
       )}
-      <input className="input" placeholder="Your answer" value={value} onChange={(e) => onChange(e.target.value)} />
+      <input
+        className="input"
+        placeholder={q.options?.length ? 'Or type your own answer' : 'Your answer'}
+        value={q.options?.includes(value) ? '' : value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }

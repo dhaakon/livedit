@@ -221,8 +221,7 @@ app.patch('/api/requests/:id', async (req) => {
   return { ok: true };
 });
 app.post('/api/requests/:id/submit', async (req) => {
-  submitRequest(Number(req.params.id));
-  return { ok: true };
+  return { ok: true, ...submitRequest(Number(req.params.id)) };
 });
 app.post('/api/requests/:id/followup', async (req) => {
   await followupRequest(Number(req.params.id), req.body ?? {});

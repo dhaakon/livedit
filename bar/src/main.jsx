@@ -17,12 +17,27 @@ function mount() {
   shadow.appendChild(container);
   createRoot(container).render(<App host={host} />);
 
-  // Keep the page's last content clear of the bar.
-  const bar = () => shadow.querySelector('.bar');
-  new ResizeObserver(() => {
-    const h = bar()?.offsetHeight ?? 0;
+  // Keep the page's last content clear of the bar, and tell the sheet and
+  // toast how tall it is. The bar is position: fixed, so watch it directly
+  // (re-attaching whenever React swaps it out).
+  let observed = null;
+  const update = () => {
+    const h = observed?.offsetHeight ?? 0;
     document.body.style.paddingBottom = `${h}px`;
-  }).observe(container);
+    container.style.setProperty('--bar-h', `${h}px`);
+  };
+  const resize = new ResizeObserver(update);
+  const attach = () => {
+    const bar = shadow.querySelector('.bar');
+    if (bar && bar !== observed) {
+      if (observed) resize.unobserve(observed);
+      resize.observe(bar);
+      observed = bar;
+    }
+    update();
+  };
+  new MutationObserver(attach).observe(shadow, { childList: true, subtree: true });
+  attach();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);

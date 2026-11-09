@@ -4,7 +4,7 @@
 // releases/current at it.
 //
 //   node bin/init-site.mjs [--from <ref>]   (default: HEAD of the dev checkout)
-import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { config } from '../lib/config.mjs';
 import { db, now, getSetting, setSetting } from '../lib/db.mjs';
@@ -15,6 +15,12 @@ const fromArg = process.argv.indexOf('--from');
 const from = fromArg > 0 ? process.argv[fromArg + 1] : 'HEAD';
 const { paths, siteBranch } = config;
 const FIRST = 'v1.0.0';
+
+// Create every data folder now, as this user, before docker compose mounts
+// them; otherwise Docker creates missing mount sources owned by root.
+for (const [name, dir] of Object.entries(paths)) {
+  if (name !== 'db' && name !== 'site') mkdirSync(dir, { recursive: true });
+}
 
 const hasRef = async (ref) => (await git(config.repo, ['rev-parse', '--verify', '--quiet', ref], { allowFail: true })).code === 0;
 
