@@ -222,10 +222,14 @@ export function App({ host }) {
             </button>
             {!rec && (
               <>
-                <button className="btn" onClick={() => setPanel(panel === 'type' ? null : 'type')} disabled={saving}>✎ Type</button>
-                <button className={pointed ? 'btn active' : 'btn'} onClick={point} disabled={saving}>⌖ Point</button>
-                <button className={files.length ? 'btn active' : 'btn'} onClick={() => fileInput.current.click()} disabled={saving}>
-                  📎 Photo
+                <button className="btn" onClick={() => setPanel(panel === 'type' ? null : 'type')} disabled={saving} aria-label="Type a note">
+                  ✎<span className="label"> Type</span>
+                </button>
+                <button className={pointed ? 'btn active' : 'btn'} onClick={point} disabled={saving} aria-label="Point at something">
+                  ⌖<span className="label"> Point</span>
+                </button>
+                <button className={files.length ? 'btn active' : 'btn'} onClick={() => fileInput.current.click()} disabled={saving} aria-label="Add a photo">
+                  📎<span className="label"> Photo</span>
                 </button>
                 <input
                   ref={fileInput}
@@ -504,7 +508,7 @@ function RequestBody({ r, data, call, viewing, onNotQuite }) {
               />
               <textarea
                 className="input inline"
-                rows={2}
+                rows={Math.min(6, Math.ceil((items[i]?.owner_summary ?? '').length / 52) + 1)}
                 value={items[i]?.owner_summary ?? ''}
                 onChange={(e) => setItems((all) => all.map((x, j) => (j === i ? { ...x, owner_summary: e.target.value } : x)))}
               />

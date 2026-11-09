@@ -33,4 +33,4 @@ You may be resumed later with "not quite" feedback from the owner, or with answe
 
 ## Final answer
 
-End with the structured report: for every item, `done | skipped | needs_clarification`, plus a `note` written for the owner (plain English, no file names, no code, for example "The Planning heading now uses the script lettering") and a `question` when you need one.
+End with the structured report: for every item, `done | skipped | needs_clarification`, plus a `note` and, when you need one, a `question`. The `note` is **one short sentence for the owner** describing the result, for example "The Planning heading now uses the script lettering". It goes into the site's public changelog, so no file names, no code, and no remarks about tooling, builds or your process. Put anything the developer should know in your normal reply text instead.
