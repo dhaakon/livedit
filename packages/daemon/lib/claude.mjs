@@ -16,9 +16,12 @@ const IMPLEMENTER_TOOLS = [
 
 /** The two `claude -p` calls (summarize, implement), bound to one project. */
 export function createClaude(project, daemon) {
-  /** Prompt file path, with {{ADD_IMAGE}} filled in with this daemon's photo tool. */
+  /** Prompt file path, with {{ADD_IMAGE}} (this daemon's photo tool), {{OWNER}}
+   * and {{SITE}} (from the project's config) filled in. */
   function prompt(name) {
-    const text = readFileSync(join(DAEMON_DIR, 'prompts', `${name}.md`), 'utf8').replaceAll('{{ADD_IMAGE}}', ADD_IMAGE);
+    const text = readFileSync(join(DAEMON_DIR, 'prompts', `${name}.md`), 'utf8').replaceAll('{{ADD_IMAGE}}', ADD_IMAGE)
+      .replaceAll('{{OWNER}}', project.ownerName)
+      .replaceAll('{{SITE}}', project.name);
     const dir = join(project.paths.tmp, 'prompts');
     mkdirSync(dir, { recursive: true });
     const out = join(dir, `${name}.md`);
@@ -114,7 +117,7 @@ function parseJson(text) {
 const PAGE_NAMES = {
   home: 'Home page', about: 'About page', services: 'Services page', gallery: 'Gallery',
   galleries: 'Gallery albums', blog: 'Blog', 'blog-post': 'Blog posts', contact: 'Contact page',
-  'not-found': 'Missing-page screen', site: 'header and footer', testimonials: 'Testimonials',
+  'not-found': 'Missing-page screen', site: 'header and footer', testimonials: 'testimonials',
 };
 
 function friendlyFile(file, cwd) {

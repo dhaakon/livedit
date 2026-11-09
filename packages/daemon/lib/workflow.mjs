@@ -468,7 +468,7 @@ export function createWorkflow(project, { store, events, claude, releases }) {
         // Other versions were published while this waited: keep them (§3.3).
         await bringUpToDate(req, latest);
       } else if (req.base_version !== latest) {
-        // the owner went back to an older version and changed that (§3.3).
+        // The owner went back to an older version and changed that (§3.3).
         await git(site, ['read-tree', '-u', '--reset', `refs/tags/${req.base_version}`]);
         await git(site, ['commit', '--allow-empty', '-m', `Restore ${req.base_version}\n\nLive-Edit-Restore: ${req.base_version}\nLive-Edit-Request: ${pad(id)}`]);
         restored = true;

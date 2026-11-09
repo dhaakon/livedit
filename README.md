@@ -6,10 +6,9 @@ checklist, and a few minutes later sees the change on a preview. Every change
 is made by `claude -p` in its own git worktree, committed with an audit trail,
 and can be published and stepped back from like browser history.
 
-It started as the editor for one site (example-site — see that repo's
-`LIVE-EDITS.md`). This repo is it extracted into a standalone, multi-project
-daemon (phase 0 of `EDITOR-EXTENSION-PLAN.md`); a browser extension that brings
-the same editor to any locally developed site comes next.
+It started as the editor for a single site and is now a standalone,
+multi-project daemon. A browser extension that brings the same editor to any
+locally developed site comes next.
 
 ## Packages
 
@@ -41,12 +40,12 @@ notes a [whisper.cpp](https://github.com/ggml-org/whisper.cpp) server
   "defaultProject": "example-site",
   "projects": {
     "example-site": {
-      "name": "example-site",
+      "name": "Example Site",
       "repo": "/home/me/Development/example-site",
       "landing": "release",
       "previewSiteUrl": "http://127.0.0.1:21783",
-      "owner": "the owner",
-      "dev": "David"
+      "owner": "Alex",
+      "dev": "Sam"
     }
   }
 }

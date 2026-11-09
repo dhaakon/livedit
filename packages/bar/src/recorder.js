@@ -1,6 +1,6 @@
 // Voice notes: MediaRecorder for the audio that gets transcribed on the
 // server, and the browser's speech recognition (where it exists) only for the
-// live caption, so the owner can see she's being heard (LIVE-EDITS.md §2.1).
+// live caption, so the owner can see they're being heard (LIVE-EDITS.md §2.1).
 
 export const canRecord = () =>
   typeof window.MediaRecorder !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
