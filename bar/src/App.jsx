@@ -161,7 +161,7 @@ export function App({ host }) {
   return (
     <>
       {panel && (
-        <Sheet onClose={() => setPanel(null)} title={{ notes: 'Your notes', changes: 'Changes', history: 'History', type: followupFor ? `What's not quite right?` : 'Type a note' }[panel]}>
+        <Sheet onClose={() => setPanel(null)} title={{ notes: 'Your notes', changes: 'Changes', history: 'History', type: followupFor ? `Reply to change #${followupFor}` : 'Type a note' }[panel]}>
           {panel === 'notes' && <NotesPanel notes={notes} call={call} onDone={done} onOlder={onOlder} live={live} latest={latest} versions={versions} />}
           {panel === 'changes' && (
             <ChangesPanel
@@ -180,6 +180,8 @@ export function App({ host }) {
             <TypePanel
               followup={followupFor}
               saving={saving}
+              files={files}
+              onAddPhoto={() => fileInput.current.click()}
               onRecordInstead={() => {
                 setPanel(null);
                 toggleRecord();
@@ -204,7 +206,7 @@ export function App({ host }) {
 
         {followupFor && !panel && (
           <div className="banner">
-            Telling Claude what's not quite right about change #{followupFor}: record, or{' '}
+            Replying to change #{followupFor}: add a photo if you like, then record or{' '}
             <button className="link" onClick={() => setPanel('type')}>type it</button>.{' '}
             <button className="link" onClick={() => setFollowupFor(null)}>Cancel</button>
           </div>
@@ -239,9 +241,17 @@ export function App({ host }) {
                   multiple
                   hidden
                   onChange={(e) => {
-                    setFiles((f) => [...f, ...e.target.files]);
+                    // Copy the files out *before* clearing the input: the state
+                    // update runs later, when the FileList would already be empty.
+                    const picked = [...e.target.files];
                     e.target.value = '';
-                    say('Photo added. It goes with your next note.');
+                    if (!picked.length) return;
+                    setFiles((f) => [...f, ...picked]);
+                    say(
+                      followupFor
+                        ? `${picked.length > 1 ? `${picked.length} photos` : 'Photo'} added. Now record or type what to do with it.`
+                        : `${picked.length > 1 ? `${picked.length} photos` : 'Photo'} added. It goes with your next note.`,
+                    );
                   }}
                 />
               </>
@@ -412,7 +422,7 @@ function NotesPanel({ notes, call, onDone, onOlder, live, latest, versions }) {
   );
 }
 
-function TypePanel({ followup, saving, onSave, onCancel, onRecordInstead }) {
+function TypePanel({ followup, saving, files, onAddPhoto, onSave, onCancel, onRecordInstead }) {
   const [text, setText] = useState('');
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (text.trim()) onSave(text.trim()).then(() => setText('')); }}>
@@ -420,12 +430,16 @@ function TypePanel({ followup, saving, onSave, onCancel, onRecordInstead }) {
         className="input area"
         rows={4}
         autoFocus
-        placeholder={followup ? 'e.g. "Closer, but make the heading a bit smaller"' : 'e.g. "Make the Services heading softer, like the logo"'}
+        placeholder={followup ? 'e.g. "Use this photo instead" or "Closer, but make the heading a bit smaller"' : 'e.g. "Make the Services heading softer, like the logo"'}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
+      {files.length > 0 && (
+        <p className="muted small">📎 {files.map((f) => f.name).join(', ')} will go with this.</p>
+      )}
       <div className="actions">
         <button className="btn primary" disabled={saving || !text.trim()}>{followup ? 'Send to Claude' : 'Save note'}</button>
+        <button type="button" className="btn" onClick={onAddPhoto}>📎 {files.length ? 'Add another' : 'Add photo'}</button>
         {canRecord() && <button type="button" className="btn" onClick={onRecordInstead}>● Record instead</button>}
         <button type="button" className="link" onClick={onCancel}>Cancel</button>
       </div>
@@ -559,7 +573,10 @@ function RequestBody({ r, data, call, viewing, onNotQuite }) {
           {asks.map((a, i) => (
             <Question key={i} q={{ ask: a.question, options: [] }} value={answers[`r${i}`] ?? ''} onChange={(v) => setAnswers((x) => ({ ...x, [`r${i}`]: v }))} />
           ))}
-          <button className="btn" onClick={sendAnswers}>Send answers</button>
+          <div className="actions">
+            <button className="btn primary" onClick={sendAnswers}>Send answers</button>
+            <button className="btn" onClick={() => onNotQuite(r.id)}>Reply with a photo or note</button>
+          </div>
         </>
       )}
       {r.error && <p className="error">{r.status === 'failed' ? `This one needs ${data.dev}, who's been told.` : r.error.split('\n')[0]}</p>}
