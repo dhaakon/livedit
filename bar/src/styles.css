@@ -201,3 +201,24 @@ pre { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 11
 }
 .choice.selected { border-color: var(--olive, #555b52); background: #fffaf0; box-shadow: inset 0 0 0 1px var(--olive, #555b52); }
 .choice.selected .tick { background: var(--olive, #555b52); border-color: var(--olive, #555b52); }
+
+/* Collapsed: one small tab in the corner (the bar is hidden by default). */
+.tab {
+  position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 2147483000;
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 8px 14px;
+  border: 1px solid rgba(37, 36, 35, 0.22); border-radius: 999px;
+  background: #fffefa; color: #252423;
+  box-shadow: 0 6px 20px rgba(37, 36, 35, 0.14);
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: 13px; letter-spacing: 0.01em;
+  cursor: pointer; opacity: 0.9;
+  transition: opacity 150ms ease, border-color 150ms ease;
+}
+.tab:hover { opacity: 1; border-color: #555b52; }
+.tab-badge {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  display: inline-grid; place-items: center;
+  background: #e5cf9e; color: #252423; font-size: 11px; font-weight: 600;
+}
+.tab-badge.quiet { background: #f3e6d6; }

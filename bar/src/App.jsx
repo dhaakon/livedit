@@ -7,6 +7,7 @@ const fmtDate = (iso) =>
   new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 const fmtShort = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 
+const HIDDEN_KEY = 'live-edits-hidden';
 const ACTIVE = ['summarizing', 'queued', 'implementing', 'building', 'publishing'];
 const NEEDS_YOU = ['awaiting_review', 'ready_for_preview', 'needs_answers', 'failed'];
 
@@ -20,6 +21,23 @@ export function App({ host }) {
   const [pointed, setPointed] = useState(null); // { info, screenshot }
   const [files, setFiles] = useState([]);
   const [followupFor, setFollowupFor] = useState(null);
+  // Collapsed to a small tab by default, so the site can be looked at as
+  // visitors see it; remembered per browser.
+  const [hidden, setHiddenState] = useState(() => {
+    try {
+      return localStorage.getItem(HIDDEN_KEY) !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  const setHidden = (value) => {
+    setHiddenState(value);
+    try {
+      localStorage.setItem(HIDDEN_KEY, String(value));
+    } catch {
+      /* private mode: just this page */
+    }
+  };
   const [saving, setSaving] = useState(false);
   const fileInput = useRef(null);
   const viewing = currentView();
@@ -157,6 +175,22 @@ export function App({ host }) {
   const attention = requests.filter((r) => NEEDS_YOU.includes(r.status)).length;
   const working = requests.some((r) => ACTIVE.includes(r.status));
   const onOlder = live !== latest;
+
+  // Stay open while recording, replying, or looking at a preview/older
+  // version — that banner is context she shouldn't lose.
+  if (hidden && !rec && !followupFor && viewing === 'live') {
+    return (
+      <>
+        {toast && <div className="toast" role="status">{toast}</div>}
+        <button className="tab" onClick={() => setHidden(false)} aria-label="Show the edit bar">
+          ✎ Edit
+          {(attention > 0 || working) && (
+            <span className={attention ? 'tab-badge' : 'tab-badge quiet'}>{working && !attention ? '…' : attention}</span>
+          )}
+        </button>
+      </>
+    );
+  }
 
   return (
     <>
@@ -314,6 +348,18 @@ export function App({ host }) {
               onClick={() => call(() => api('live', { method: 'POST', body: { step: 1 } })).then((r) => r && location.reload())}
             >
               ▶
+            </button>
+            <button
+              className="btn icon"
+              aria-label="Hide the edit bar"
+              title="Hide"
+              disabled={Boolean(rec)}
+              onClick={() => {
+                setPanel(null);
+                setHidden(true);
+              }}
+            >
+              ⌄
             </button>
           </div>
         </div>
