@@ -2,10 +2,14 @@
 // steps as the owner's Publish (version, changelog, tag, release build, live
 // switch, History entry), so it can be stepped back from like any other.
 //
-//   node bin/release-site.mjs --bump minor --route / --line "What changed, for the owner" [--line …]
+//   node bin/release-site.mjs [--project <id>] --bump minor --route / --line "What changed, for the owner" [--line …]
 //
 // Run while the live-edits server is idle (no publish in progress).
-import { releaseSiteHead } from '../lib/workflow.mjs';
+import { loadConfig, projectFromArgs } from '../lib/config.mjs';
+import { openProject } from '../lib/project.mjs';
+
+const daemonConfig = loadConfig();
+const { releaseSiteHead } = openProject(projectFromArgs(daemonConfig), daemonConfig.daemon).workflow;
 
 const args = process.argv.slice(2);
 const all = (name) => args.flatMap((a, i) => (a === `--${name}` ? [args[i + 1]] : []));

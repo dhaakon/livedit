@@ -1,13 +1,10 @@
+// One SQLite store per project (its .live-edits/live-edits.db). Opening a
+// store creates the schema if it's new, so existing databases are used as-is.
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { config } from './config.mjs';
 
-mkdirSync(dirname(config.paths.db), { recursive: true });
-export const db = new DatabaseSync(config.paths.db);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
-
-db.exec(`
+const SCHEMA = `
 CREATE TABLE IF NOT EXISTS notes (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   request_id    INTEGER,
@@ -55,17 +52,9 @@ CREATE TABLE IF NOT EXISTS versions (
   set_aside_by  TEXT
 );
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
-`);
+`;
 
 export const now = () => new Date().toISOString();
-
-export function getSetting(key) {
-  return db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value ?? null;
-}
-export function setSetting(key, value) {
-  db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
-    .run(key, value);
-}
 
 const JSON_COLS = { notes: ['pointed', 'attachments'], requests: ['summary', 'report'], versions: ['lines'] };
 
@@ -78,26 +67,35 @@ export function parseRow(table, row) {
   return out;
 }
 
-export function getRequest(id) {
-  return parseRow('requests', db.prepare('SELECT * FROM requests WHERE id = ?').get(id));
-}
+export function openStore(dbPath) {
+  mkdirSync(dirname(dbPath), { recursive: true });
+  const db = new DatabaseSync(dbPath);
+  db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+  db.exec(SCHEMA);
 
-export function updateRequest(id, fields) {
-  const entries = Object.entries({ ...fields, updated_at: now() }).map(([k, v]) => [
-    k,
-    v !== null && typeof v === 'object' ? JSON.stringify(v) : v,
-  ]);
-  const sets = entries.map(([k]) => `${k} = ?`).join(', ');
-  db.prepare(`UPDATE requests SET ${sets} WHERE id = ?`).run(...entries.map(([, v]) => v), id);
-  return getRequest(id);
-}
+  const getSetting = (key) => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value ?? null;
+  const setSetting = (key, value) =>
+    db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(key, value);
 
-export function notesFor(requestId) {
-  return db.prepare('SELECT * FROM notes WHERE request_id = ? ORDER BY id').all(requestId).map((r) => parseRow('notes', r));
-}
+  const getRequest = (id) => parseRow('requests', db.prepare('SELECT * FROM requests WHERE id = ?').get(id));
 
-export function listVersions() {
-  return db.prepare('SELECT * FROM versions').all().map((r) => parseRow('versions', r)).sort((a, b) => compareVersions(a.tag, b.tag));
+  function updateRequest(id, fields) {
+    const entries = Object.entries({ ...fields, updated_at: now() }).map(([k, v]) => [
+      k,
+      v !== null && typeof v === 'object' ? JSON.stringify(v) : v,
+    ]);
+    const sets = entries.map(([k]) => `${k} = ?`).join(', ');
+    db.prepare(`UPDATE requests SET ${sets} WHERE id = ?`).run(...entries.map(([, v]) => v), id);
+    return getRequest(id);
+  }
+
+  const notesFor = (requestId) =>
+    db.prepare('SELECT * FROM notes WHERE request_id = ? ORDER BY id').all(requestId).map((r) => parseRow('notes', r));
+
+  const listVersions = () =>
+    db.prepare('SELECT * FROM versions').all().map((r) => parseRow('versions', r)).sort((a, b) => compareVersions(a.tag, b.tag));
+
+  return { db, getSetting, setSetting, getRequest, updateRequest, notesFor, listVersions, close: () => db.close() };
 }
 
 export function parseVersion(tag) {

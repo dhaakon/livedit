@@ -1,0 +1,17 @@
+{
+  "name": "@live-edits/bar",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "The edit bar: a self-contained shadow-DOM script, injected by a host (nginx, a browser extension or a dev-server plugin).",
+  "scripts": {
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.2.1",
+    "html-to-image": "^1.11.13",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.6"
+  }
+}

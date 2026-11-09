@@ -1,10 +1,18 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App.jsx';
+import { configure } from './api.js';
 import css from './styles.css?inline';
 
-// Injected by the preview nginx into every page (LIVE-EDITS.md §2.1). Lives in
-// a shadow root so the site's styles and the bar's can't touch each other.
-function mount() {
+// Injected into the page by a host — today a hosted preview's nginx
+// (LIVE-EDITS.md §2.1); later the browser extension or a dev-server plugin.
+// Lives in a shadow root so the site's styles and the bar's can't touch each
+// other. A host can set window.__LIVE_EDITS_CONFIG__ = { base } before the
+// script runs to point the bar at a particular daemon/project.
+if (window.__LIVE_EDITS_CONFIG__) configure(window.__LIVE_EDITS_CONFIG__);
+
+export { configure };
+
+export function mount() {
   if (document.getElementById('live-edits-root') || /(?:^|;\s*)le_nobar=1/.test(document.cookie)) return;
   const host = document.createElement('div');
   host.id = 'live-edits-root';

@@ -1,8 +1,7 @@
 import { spawn } from 'node:child_process';
-import { config } from './config.mjs';
 
 /** Run a command, collecting output. Never throws on a non-zero exit; check `code`. */
-export function run(cmd, args, { cwd = config.repo, input, env, onStdoutLine, timeoutMs } = {}) {
+export function run(cmd, args, { cwd = process.cwd(), input, env, onStdoutLine, timeoutMs } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { cwd, env: { ...process.env, ...env }, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '';

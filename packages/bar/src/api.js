@@ -1,5 +1,26 @@
-// Talks to the live-edits server through the preview host's /_live-edits/ proxy.
-export const BASE = '/_live-edits/';
+// Talks to the live-edits daemon. By default the API base is wherever this
+// script was loaded from: a hosted preview's nginx serves /_live-edits/bar.js
+// (the daemon's default project), and /_live-edits/p/<project>/bar.js scopes
+// it to one project. A host that injects the bar some other way (a browser
+// extension, a dev-server plugin) calls configure() before mount instead.
+function scriptBase() {
+  try {
+    const src = document.currentScript?.src;
+    if (src) return new URL('.', src).pathname;
+  } catch {
+    /* fall through */
+  }
+  return '/_live-edits/';
+}
+
+export let BASE = scriptBase();
+let transportFetch = (...args) => fetch(...args);
+
+/** Override how the bar reaches the daemon. `base` must end with "/". */
+export function configure({ base, fetch: customFetch } = {}) {
+  if (base) BASE = base.endsWith('/') ? base : `${base}/`;
+  if (customFetch) transportFetch = customFetch;
+}
 
 const TOKEN_KEY = 'live-edits-token';
 
@@ -37,7 +58,7 @@ export class ApiError extends Error {
 }
 
 export async function api(path, { method = 'GET', body, form } = {}) {
-  const res = await fetch(BASE + 'api/' + path, {
+  const res = await transportFetch(BASE + 'api/' + path, {
     method,
     headers: { 'X-Live-Edits-Token': token, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     body: form ?? (body ? JSON.stringify(body) : undefined),

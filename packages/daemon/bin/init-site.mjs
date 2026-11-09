@@ -3,24 +3,28 @@
 // worktree, the shared node_modules, the v1.0.0 release, and points
 // releases/current at it.
 //
-//   node bin/init-site.mjs [--from <ref>]   (default: HEAD of the dev checkout)
-import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+//   node bin/init-site.mjs [--project <id>] [--from <ref>]   (default ref: HEAD of the project's checkout)
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { config } from '../lib/config.mjs';
-import { db, now, getSetting, setSetting } from '../lib/db.mjs';
+import { loadConfig, projectFromArgs } from '../lib/config.mjs';
+import { now } from '../lib/store.mjs';
 import { git } from '../lib/run.mjs';
-import { build, currentRelease, releaseExists, switchCurrent, thumbnail } from '../lib/releases.mjs';
+import { openProject } from '../lib/project.mjs';
+
+const daemonConfig = loadConfig();
+const config = projectFromArgs(daemonConfig);
+const { store, releases } = openProject(config, daemonConfig.daemon);
+const { db, getSetting, setSetting } = store;
+const { build, currentRelease, releaseExists, switchCurrent, thumbnail } = releases;
 
 const fromArg = process.argv.indexOf('--from');
 const from = fromArg > 0 ? process.argv[fromArg + 1] : 'HEAD';
 const { paths, siteBranch } = config;
 const FIRST = 'v1.0.0';
 
-// Create every data folder now, as this user, before docker compose mounts
-// them; otherwise Docker creates missing mount sources owned by root.
-for (const [name, dir] of Object.entries(paths)) {
-  if (name !== 'db' && name !== 'site') mkdirSync(dir, { recursive: true });
-}
+// openProject() above has already created every data folder, as this user,
+// before docker compose mounts them; otherwise Docker creates missing mount
+// sources owned by root.
 
 const hasRef = async (ref) => (await git(config.repo, ['rev-parse', '--verify', '--quiet', ref], { allowFail: true })).code === 0;
 
@@ -69,3 +73,4 @@ if (!getSetting('latest_version')) setSetting('latest_version', FIRST);
 const thumb = await thumbnail(FIRST, '/');
 if (thumb) db.prepare('UPDATE versions SET thumbnail = ? WHERE tag = ?').run(thumb, FIRST);
 console.log(`ready: live ${getSetting('live_version')}, latest ${getSetting('latest_version')}${thumb ? '' : ' (no thumbnail yet: is the preview container up?)'}`);
+process.exit(0);

@@ -1,0 +1,15 @@
+{
+  "name": "@live-edits/daemon",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Multi-project live-edits daemon: notes, transcription, Claude summarize/implement in git worktrees, previews and landing.",
+  "bin": { "live-edits": "server.mjs" },
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^9.4.0",
+    "fastify": "^5.12.8"
+  }
+}
