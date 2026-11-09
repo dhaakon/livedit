@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "status", "note", "question"],
+        "properties": {
+          "item": { "type": "integer", "description": "1-based checklist item number" },
+          "status": { "type": "string", "enum": ["done", "skipped", "needs_clarification"] },
+          "note": { "type": "string", "description": "One plain-English line for the owner about what was done (or why not). No file names or code." },
+          "question": { "type": "string", "description": "For needs_clarification: the question to ask the owner. Otherwise empty." }
+        }
+      }
+    }
+  }
+}

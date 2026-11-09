@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["items", "questions", "version_bump"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "owner_summary", "route", "targets", "kind", "attachments", "confidence", "source_quote"],
+        "properties": {
+          "title": { "type": "string", "description": "Short dev-facing title, used as the commit subject, e.g. 'Services: softer script style for Planning heading'" },
+          "owner_summary": { "type": "string", "description": "One plain-English sentence the owner will read and approve. No jargon." },
+          "route": { "type": "string", "description": "Site route the change is on, e.g. /services, or * for site-wide" },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["edit_id", "file_hint"],
+              "properties": {
+                "edit_id": { "type": "string", "description": "data-edit-id or content JSON path if known, else empty" },
+                "file_hint": { "type": "string", "description": "Most likely file to change, from the site map" }
+              }
+            }
+          },
+          "kind": { "type": "string", "enum": ["copy", "image", "style", "layout", "new-section", "new-page", "other"] },
+          "attachments": { "type": "array", "items": { "type": "string" }, "description": "Attachment file names this item uses" },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+          "source_quote": { "type": "string", "description": "The owner's own words this item comes from" }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "ask", "options"],
+        "properties": {
+          "item": { "type": ["integer", "null"], "description": "1-based item number the question is about, or null for a request not yet turned into an item" },
+          "ask": { "type": "string", "description": "Short, friendly question in plain English" },
+          "options": { "type": "array", "items": { "type": "string" }, "description": "2-4 likely answers, or empty for free text" }
+        }
+      }
+    },
+    "version_bump": { "type": "string", "enum": ["patch", "minor"] }
+  }
+}

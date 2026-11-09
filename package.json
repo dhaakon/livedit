@@ -1,0 +1,26 @@
+{
+  "name": "live-edits",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Voice-to-change server and edit bar for the example-site site (see LIVE-EDITS.md).",
+  "scripts": {
+    "start": "node server.mjs",
+    "build:bar": "vite build --config bar/vite.config.js",
+    "init-site": "node bin/init-site.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "@fastify/multipart": "^9.4.0",
+    "fastify": "^5.12.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.2.1",
+    "html-to-image": "^1.11.13",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.6"
+  }
+}
